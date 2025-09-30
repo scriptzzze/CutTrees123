@@ -1,0 +1,763 @@
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local Window = WindUI:CreateWindow({
+    Title = "Cut Trees",
+    Icon = "tent-tree", -- lucide icon
+    Author = "Scriptie",
+    Folder = "MySuperHub",
+
+    -- ↓ This all is Optional. You can remove it.
+    Size = UDim2.fromOffset(580, 460),
+    MinSize = Vector2.new(560, 350),
+    MaxSize = Vector2.new(800, 500),
+    Transparent = true,
+    Theme = "Dark",
+    Resizable = true,
+    SideBarWidth = 200,
+    BackgroundImageTransparency = 0.42,
+    HideSearchBar = true,
+    ScrollBarEnabled = true,
+    
+    User = {
+        Enabled = true,
+        Anonymous = false,
+        Callback = function()
+            print("username loaded")
+        end,
+    },
+    
+    KeySystem = { 
+        -- ↓ Optional. You can remove it.
+        Key = { "treecut321", "abcd" },
+        
+        Note = [[KEY SYSTEM
+
+        Steps
+
+1. Click Get Key
+
+2. Paste The Link In Your Browser]],
+        
+        -- ↓ Optional. You can remove it.
+        URL = "https://discord.gg/2dfetPQKkN",
+        
+        -- ↓ Optional. You can remove it.
+        SaveKey = true, -- automatically save and load the key.
+    },
+})
+
+Window:SetBackgroundImage("rbxassetid://10149736922")
+
+WindUI:Notify({
+    Title = "Script Loaded",
+    Content = "Hotkey - H",
+    Duration = 7,
+    Icon = "fingerprint",
+})
+
+Window:EditOpenButton({
+    Title = "Cut Trees",
+    Icon = "square-arrow-out-up-right",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new( -- gradient
+        Color3.fromHex("FF0F7B"), 
+        Color3.fromHex("F89B29")
+    ),
+    OnlyMobile = true,
+    Enabled = true,
+    Draggable = true,
+})
+
+WindUI:ToggleAcrylic(true)
+
+WindUI:SetNotificationLower(true)
+
+Window:SetToggleKey(Enum.KeyCode.H)
+
+local MainTab = Window:Tab({
+    Title = "Trees",
+    Icon = "trees", -- optional
+    Locked = false,
+})
+
+local Section = MainTab:Section({ 
+    Title = "Trees",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+local Toggle = MainTab:Toggle({
+    Title = "Auto Chop",
+    Desc = "Chops Trees Automatically",
+    Icon = "axe",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        getgenv().chop = state
+    end
+})
+
+-- single, high-speed loop
+task.spawn(function()
+    local rs = game:GetService("ReplicatedStorage")
+    local treeRemote = rs:WaitForChild("Signal"):WaitForChild("Tree")
+    local folder = workspace:FindFirstChild("TreesFolder") or workspace
+
+    local function fireTree(worldName)
+        local id = math.random(1, 16000)
+        local name = worldName .. "_" .. tostring(id)
+        local treeInstance = folder:FindFirstChild(name)
+
+        -- fire remote without delay
+        if treeInstance then
+            treeRemote:FireServer("damage", treeInstance)
+        else
+            treeRemote:FireServer("damage", name)
+        end
+    end
+
+    while true do
+        if getgenv().chop then
+            fireTree("World 1")
+            fireTree("World 2")
+            -- optional: repeat multiple times per frame for maximum speed
+            fireTree("World 1")
+            fireTree("World 2")
+        end
+        task.wait(0) -- almost zero delay, yields to prevent freezing
+    end
+end)
+
+local Toggle = MainTab:Toggle({
+    Title = "Ultra Auto Chop",
+    Desc = "Slightly Better Than Normal Auto Chop",
+    Icon = "axe",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        getgenv().chop = state
+    end
+})
+
+-- single, high-speed loop
+task.spawn(function()
+    local rs = game:GetService("ReplicatedStorage")
+    local treeRemote = rs:WaitForChild("Signal"):WaitForChild("Tree")
+    local folder = workspace:FindFirstChild("TreesFolder") or workspace
+
+    local function fireTree(worldName)
+        local id = math.random(1, 16000)
+        local name = worldName .. "_" .. tostring(id)
+        local treeInstance = folder:FindFirstChild(name)
+
+        -- fire remote without delay
+        if treeInstance then
+            treeRemote:FireServer("damage", treeInstance)
+        else
+            treeRemote:FireServer("damage", name)
+        end
+    end
+
+    while true do
+        if getgenv().chop then
+            fireTree("World 1")
+            fireTree("World 2")
+            fireTree("World 1")
+            fireTree("World 2")
+        end
+        task.wait(0) -- almost zero delay, yields to prevent freezing
+    end
+end)
+
+local Section = MainTab:Section({ 
+    Title = [[Tree Hitbox]],
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+-- Default hitbox value
+local hitboxSize = 1
+
+-- Function to update hitboxes
+local function updateTreeHitboxes()
+    local TreesFolder = workspace:WaitForChild("TreesFolder")
+    
+    for _, tree in ipairs(TreesFolder:GetChildren()) do
+        if tree:FindFirstChild("Hitpart") then
+            local hitPart = tree.Hitpart
+
+            -- Apply new size only on X and Z; keep Y (height) unchanged
+            hitPart.Size = Vector3.new(hitboxSize, hitPart.Size.Y, hitboxSize)
+
+            -- Optimize performance
+            hitPart.CanCollide = false
+            hitPart.CanTouch = true
+            hitPart.CanQuery = true
+        end
+    end
+end
+
+-- One slider for X and Z
+local Slider = MainTab:Slider({
+    Title = "Tree Hitbox",
+    
+    Step = 1,
+    
+    Value = {
+        Min = 1,
+        Max = 2048,
+        Default = 1,
+    },
+    
+    Callback = function(value)
+        hitboxSize = value
+        updateTreeHitboxes()
+    end
+})
+
+local Section = MainTab:Section({ 
+    Title = "Tool Hitbox",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Default handle size
+local handleSize = {X = 1, Y = 1, Z = 1}
+
+-- Function to get the current tool
+local function getCurrentTool()
+    local characterFolder = workspace.CharacterFolders:FindFirstChild(LocalPlayer.Name)
+    if not characterFolder then return nil end
+
+    for _, child in ipairs(characterFolder:GetChildren()) do
+        if child:IsA("Tool") and child:FindFirstChild("Handle") then
+            return child
+        end
+    end
+
+    return nil
+end
+
+-- Function to update handle size
+local function updateHandleSize()
+    local tool = getCurrentTool()
+    if tool then
+        tool.Handle.Size = Vector3.new(handleSize.X, handleSize.Y, handleSize.Z)
+    end
+end
+
+-- Wind UI sliders for X, Y, Z
+local XSlider = MainTab:Slider({
+    Title = "Width",
+    Step = 1,
+    Value = {Min = 1, Max = 2048, Default = 20},
+    Callback = function(value)
+        handleSize.X = value
+        updateHandleSize()
+    end
+})
+
+local YSlider = MainTab:Slider({
+    Title = "Height",
+    Step = 1,
+    Value = {Min = 1, Max = 2048, Default = 20},
+    Callback = function(value)
+        handleSize.Y = value
+        updateHandleSize()
+    end
+})
+
+local ZSlider = MainTab:Slider({
+    Title = "Depth/Length",
+    Step = 1,
+    Value = {Min = 1, Max = 2048, Default = 20},
+    Callback = function(value)
+        handleSize.Z = value
+        updateHandleSize()
+    end
+})
+
+-- Auto-update in case player switches tools
+task.spawn(function()
+    while true do
+        updateHandleSize()
+        task.wait() -- refresh every 0.2 seconds
+    end
+end)
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Global variable to track toggle state
+getgenv().toolInvisible = false
+
+-- Function to get the current tool
+local function getCurrentTool()
+    local characterFolder = workspace.CharacterFolders:FindFirstChild(LocalPlayer.Name)
+    if not characterFolder then return nil end
+
+    for _, child in ipairs(characterFolder:GetChildren()) do
+        if child:IsA("Tool") and child:FindFirstChild("Handle") then
+            return child
+        end
+    end
+
+    return nil
+end
+
+-- Wind UI toggle to make tool invisible
+local Toggle = MainTab:Toggle({
+    Title = "Invisible Tool",
+    Desc = "Makes your tool invisible",
+    Icon = "eye-off",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        getgenv().toolInvisible = state
+    end
+})
+
+-- Loop to update transparency
+task.spawn(function()
+    while true do
+        local tool = getCurrentTool()
+        if tool then
+            if getgenv().toolInvisible then
+                tool.Handle.Transparency = 1 -- make invisible
+            else
+                tool.Handle.Transparency = 0 -- restore visibility
+            end
+        end
+        task.wait(0.2) -- refresh every 0.2 seconds
+    end
+end)
+
+local ChestTab = Window:Tab({
+    Title = "Chest",
+    Icon = "package-open", -- optional
+    Locked = false,
+})
+
+local Section = ChestTab:Section({ 
+    Title = "Smart Auto Chest",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+-- === Chest Collector (ProximityPrompt only) ===
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Chest name options
+local chestOptions = {}
+for i = 1, 9 do
+    table.insert(chestOptions, "Chest" .. i)
+    table.insert(chestOptions, "Chest" .. i .. "_Huge")
+    table.insert(chestOptions, "Chest" .. i .. "_Giant")
+end
+
+getgenv().SelectedChestNames = {}
+getgenv().CollectSelectedChests = false
+local _collectTaskRunning = false
+
+-- Dropdown (multi)
+local Dropdown = ChestTab:Dropdown({
+    Title = "Select Chests",
+    Values = chestOptions,
+    Value = {},
+    Multi = true,
+    AllowNone = true,
+    Callback = function(option)
+        getgenv().SelectedChestNames = option or {}
+        print("[ChestCollector] Selected:", HttpService:JSONEncode(getgenv().SelectedChestNames))
+    end
+})
+
+-- Safe chest folder getter
+local function GetChestFolder()
+    return workspace:FindFirstChild("ChestFolder") or workspace
+end
+
+-- Toggle
+ChestTab:Toggle({
+    Title = "Collect Selected Chests",
+    Desc = "Auto Collects The Chest That You Select",
+    Icon = "package-check",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        getgenv().CollectSelectedChests = state
+
+        if state and not _collectTaskRunning then
+            _collectTaskRunning = true
+            task.spawn(function()
+                print("[ChestCollector] STARTED")
+                while getgenv().CollectSelectedChests do
+                    local character = player.Character or player.CharacterAdded:Wait()
+                    local hrp = character:WaitForChild("HumanoidRootPart")
+                    local chestFolder = GetChestFolder()
+
+                    if #getgenv().SelectedChestNames == 0 then
+                        print("[ChestCollector] WARNING: no chest types selected in dropdown.")
+                        task.wait(1)
+                        continue
+                    end
+
+                    for _, chest in ipairs(chestFolder:GetChildren()) do
+                        if not getgenv().CollectSelectedChests then break end
+                        local cname = chest.Name
+
+                        if table.find(getgenv().SelectedChestNames, cname) then
+                            local hitpart = chest:FindFirstChild("Hitpart")
+                            local prompt = hitpart and hitpart:FindFirstChildOfClass("ProximityPrompt")
+
+                            if hitpart and prompt then
+                                -- Teleport above chest
+                                pcall(function()
+                                    hrp.CFrame = hitpart.CFrame + Vector3.new(0, 4, 0)
+                                end)
+                                task.wait(0.25)
+
+                                -- Fire prompt
+                                pcall(function()
+                                    if typeof(fireproximityprompt) == "function" then
+                                        fireproximityprompt(prompt)
+                                    else
+                                        prompt:InputHoldBegin()
+                                        task.wait(prompt.HoldDuration or 0.2)
+                                        prompt:InputHoldEnd()
+                                    end
+                                end)
+                            end
+                        end
+                    end
+                    task.wait(0.5)
+                end
+                print("[ChestCollector] STOPPED")
+                _collectTaskRunning = false
+            end)
+        end
+    end
+})
+
+local Section = ChestTab:Section({ 
+    Title = "Auto Discard All Chest",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+-- Build chest options
+local chestOptions = {}
+for i = 1, 9 do
+    table.insert(chestOptions, "Chest" .. i)
+    table.insert(chestOptions, "Chest" .. i .. "_Huge")
+    table.insert(chestOptions, "Chest" .. i .. "_Giant")
+end
+
+getgenv().autoChest = false
+
+-- Toggle to auto-discard all chests
+local ChestToggle = ChestTab:Toggle({
+    Title = "Auto Discard All Chests",
+    Desc = "Automatically discards all chests",
+    Icon = "package-x",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        getgenv().autoChest = state
+        if not state then return end
+
+        task.spawn(function()
+            local rs = game:GetService("ReplicatedStorage")
+            local chestRemote = rs:WaitForChild("Signal"):WaitForChild("Chest")
+
+            while getgenv().autoChest do
+                task.wait(0) -- adjust speed
+                for _, chestName in ipairs(chestOptions) do
+                    chestRemote:FireServer("Discard", chestName)
+                    print("Discarded:", chestName)
+                end
+            end
+        end)
+    end
+})
+
+local PassTab = Window:Tab({
+    Title = "Gamepass",
+    Icon = "circle-dollar-sign", -- optional
+    Locked = false,
+})
+
+local Section = PassTab:Section({ 
+    Title = "Gamepass",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+local Toggle = PassTab:Toggle({
+    Title = "X Ray",
+    Desc = "Shows Where The Chests Are Located",
+    Icon = "rectangle-goggles",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state) 
+        if state then
+             game:GetService("Players").LocalPlayer.GamepassFolder.XRAY.Value = true
+   else
+    game:GetService("Players").LocalPlayer.GamepassFolder.XRAY.Value = false
+   end
+    end
+})
+
+local Toggle = PassTab:Toggle({
+    Title = "2X Wood",
+    Desc = "Doubles Wood",
+    Icon = "flame-kindling",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state) 
+       if state then
+        game:GetService("Players").LocalPlayer.GamepassFolder.X2WOOD.Value = true
+   else
+        game:GetService("Players").LocalPlayer.GamepassFolder.X2WOOD.Value = false
+   end
+end
+})
+
+local Toggle = PassTab:Toggle({
+    Title = "2X Power",
+    Desc = "Doubles Power",
+    Icon = "biceps-flexed",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state) 
+       if state then
+    game:GetService("Players").LocalPlayer.GamepassFolder.X2POWER.Value = true
+   else
+    game:GetService("Players").LocalPlayer.GamepassFolder.X2POWER.Value = false
+   end
+  end
+})
+
+local Toggle = PassTab:Toggle({
+    Title = "2X Loot",
+    Desc = "Doubles Loot",
+    Icon = "gift",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state) 
+        if state then
+    game:GetService("Players").LocalPlayer.GamepassFolder.X2LOOT.Value = true
+   else
+    game:GetService("Players").LocalPlayer.GamepassFolder.X2LOOT.Value = false
+   end
+end
+})
+
+local Toggle = PassTab:Toggle({
+    Title = "Lucky",
+    Desc = "50% Extra Luck",
+    Icon = "clover",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state) 
+        if state then
+    game:GetService("Players").LocalPlayer.GamepassFolder.LUCKY.Value = true
+   else
+    game:GetService("Players").LocalPlayer.GamepassFolder.LUCKY.Value = false
+   end
+end
+})
+
+local Toggle = PassTab:Toggle({
+    Title = "Ultra Lucky",
+    Desc = "100% Extra Luck",
+    Icon = "clover",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state) 
+        if state then
+    game:GetService("Players").LocalPlayer.GamepassFolder.ULTRALUCKY.Value = true
+   else
+    game:GetService("Players").LocalPlayer.GamepassFolder.ULTRALUCKY.Value = false
+   end
+end
+})
+
+local MiscTab = Window:Tab({
+    Title = "Player",
+    Icon = "user-round", -- optional
+    Locked = false,
+})
+
+local Section = MiscTab:Section({ 
+    Title = "Humanoid",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+local Slider = MiscTab:Slider({
+    Title = "Walkspeed",
+    
+    -- To make float number supported, 
+    -- make the Step a float number.
+    -- example: Step = 0.1
+    Step = 1,
+    
+    Value = {
+        Min = 18,
+        Max = 100,
+        Default = 18,
+    },
+    Callback = function(value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+    end
+})
+
+local Slider = MiscTab:Slider({
+    Title = "Spin",
+    Step = 1,
+    
+    Value = {
+        Min = 0,
+        Max = 360,
+        Default = 0,
+    },
+    Callback = function(value)
+        getgenv().spinning = true
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+-- Default spin speed
+getgenv().spinSpeed = 1 -- degrees per step
+
+-- Spin loop
+task.spawn(function()
+    while getgenv().spinning do
+        task.wait()
+        hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(getgenv().spinSpeed), 0)
+    end
+end)
+
+getgenv().spinSpeed = value
+end
+})
+
+local Toggle = MiscTab:Toggle({
+    Title = "Noclip",
+    Desc = "",
+    Icon = "users",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state) 
+        if state then
+            getgenv().noclip = true
+while getgenv().noclip do
+    task.wait()
+    for _, part in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+else
+    getgenv().noclip = false
+while getgenv().noclip do
+    task.wait()
+    for _, part in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+end
+end
+})
+
+-- Infinite Jump Toggle
+local Toggle = MiscTab:Toggle({
+    Title = "Infinite Jump",
+    Desc = "",
+    Icon = "rabbit",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state) 
+        getgenv().infiniteJump = state -- true when enabled, false when disabled
+    end
+})
+
+-- Single JumpRequest connection (no duplicates)
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if getgenv().infiniteJump then
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end
+end)
+
+local Button = MiscTab:Button({
+    Title = "Anti Afk",
+    Desc = "",
+    Locked = false,
+    Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Pxrson/Scripts/refs/heads/main/Main/antiAFK%20copyPOS/anti%20afk.lua",true))()
+    end
+})
+
+-- Overpowered Tab
+local TrollTab = Window:Tab({
+    Title = "Troll",
+    Icon = "laugh", -- optional
+    Locked = false,
+})
+
+local Section = TrollTab:Section({ 
+    Title = "Fake Wood And Level",
+    TextXAlignment = "Left",
+    TextSize = 17, -- Default Size
+})
+
+-- Level Fake Input
+local LevelInput = TrollTab:Input({
+    Title = "Level",
+    Desc = "Enter fake level value",
+    Value = "1",
+    InputIcon = "hash", -- lucide icon
+    Type = "Input", -- could also be "Textarea"
+    Placeholder = "Enter Level...",
+    Callback = function(input)
+        local number = tonumber(input)
+        if number then
+            game:GetService("Players").LocalPlayer.leaderstats.Level.Value = number
+        end
+    end
+})
+
+-- Wood Fake Input
+local WoodInput = TrollTab:Input({
+    Title = "Wood",
+    Desc = "Enter fake wood amount",
+    Value = "1",
+    InputIcon = "tree-pine", -- lucide icon
+    Type = "Input",
+    Placeholder = "Enter Wood...",
+    Callback = function(input)
+        local number = tonumber(input)
+        if number then
+            game:GetService("Players").LocalPlayer.leaderstats.Wood.Value = number
+        end
+    end
+})
+
